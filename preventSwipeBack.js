@@ -1,34 +1,29 @@
-window.addEventListener("touchstart", handleTouchStart, false);
-window.addEventListener("touchmove", handleTouchMove, { passive: false });
+function handleTouchMove(event, xStart, yStart) {
+  var xDiff = xStart - event.touches[0].pageX;
+  var yDiff = yStart - event.touches[0].pageY;
 
-let xDown = null;
-let yDown = null;
-
-function getTouches(evt) {
-  return evt.touches || evt.originalEvent.touches;
+  // Prevent horizontal swipe
+  if (xDiff > 20 && Math.abs(xDiff) > Math.abs(yDiff)) {
+    event.preventDefault();
+  }
 }
 
-function handleTouchStart(evt) {
-  const firstTouch = getTouches(evt)[0];
-  xDown = firstTouch.clientX;
-  yDown = firstTouch.clientY;
+var newHandleTouchMove = function (xStart, yStart) {
+  return function (event) {
+    handleTouchMove(event, xStart, yStart);
+  };
 }
 
-function handleTouchMove(evt) {
-  if (!xDown || !yDown) {
+document.addEventListener('touchstart', function (startEvent) {
+  // Ignore multi-touch gestures
+  if (startEvent.touches.length > 1) {
     return;
   }
-  let xUp = evt.touches[0].clientX;
-  let yUp = evt.touches[0].clientY;
 
-  let xDiff = xDown - xUp;
-  let yDiff = yDown - yUp;
+  var xStart = startEvent.touches[0].pageX;
+  var yStart = startEvent.touches[0].pageY;
 
-  if (Math.abs(xDiff) > Math.abs(yDiff)) {
-    evt.preventDefault();
-  }
 
-  // Reset values
-  xDown = null;
-  yDown = null;
-}
+  // Attach the touchmove event listener
+  document.addEventListener('touchmove', newHandleTouchMove(xStart, yStart), { passive: false });
+}, { passive: false });
